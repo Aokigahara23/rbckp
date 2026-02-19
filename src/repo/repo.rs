@@ -3,20 +3,19 @@ use sled::Db;
 use std::path::PathBuf;
 
 use crate::{
-    backup::cdc_chunker::CdcChunker,
-    repo::{pack_location::PackLocation, pack_writer::PackWriter},
+    backup::cdc_chunker::CdcChunker, config::RepositorySettings, repo::pack_writer::PackWriter,
 };
 
 pub struct Repository<'a> {
     repo_path: PathBuf,
     pack_writer: PackWriter,
-    cdc_chunker: &'a CdcChunker,
+    settings: &'a RepositorySettings,
     index_db: Db,
 }
 
 impl<'a> Repository<'a> {
-    pub fn new(repo_path: PathBuf, cdc_chunker: &'a CdcChunker) -> Result<Self> {
-        let pack_writer = PackWriter::new(&repo_path)?;
+    pub fn new(repo_path: PathBuf, settings: &'a RepositorySettings) -> Result<Self> {
+        let pack_writer = PackWriter::new(&repo_path, settings.max_chunk_pack_size_bytes)?;
         std::fs::create_dir_all(&repo_path)?;
 
         let index_path = repo_path.join("index.db");
@@ -25,16 +24,14 @@ impl<'a> Repository<'a> {
         Ok(Repository {
             repo_path: repo_path.clone(),
             pack_writer: pack_writer,
-            cdc_chunker: cdc_chunker,
+            settings: settings,
             index_db: global_index_db,
         })
     }
 
-    pub fn write_chunks(&self, chunks: &Vec<&[u8]>) -> Result<()> {
-        for &chunk in chunks {
-            let chunk_hash = blake3::hash(chunk);
-            let index_entry = self.index_db.get(chunk_hash.as_bytes())?;
-        }
+    pub fn write_chunk(&self, chunk: &[u8]) -> Result<()> {
+        let chunk_hash = blake3::hash(chunk);
+        let index_entry = self.index_db.get(chunk_hash.as_bytes())?;
 
         Ok(())
     }

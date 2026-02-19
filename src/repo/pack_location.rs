@@ -1,12 +1,12 @@
 use anyhow::{Context, Result};
 
-pub struct PackLocation {
+pub struct ChunkLocation {
     pack_id: u32,
     offset: u64,
     length: u32,
 }
 
-impl PackLocation {
+impl ChunkLocation {
     pub fn to_bytes(&self) -> [u8; 16] {
         let mut buffer = [0u8; 16];
         buffer[0..4].copy_from_slice(&self.pack_id.to_le_bytes());

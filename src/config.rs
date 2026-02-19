@@ -18,8 +18,22 @@ impl ChunkSettings {
 }
 
 #[derive(serde::Deserialize, Clone, Debug)]
+pub struct RepositorySettings {
+    pub max_chunk_pack_size_bytes: u64,
+}
+
+impl RepositorySettings {
+    fn default() -> Self {
+        Self {
+            max_chunk_pack_size_bytes: 1u64 << 30, // 1 GiB,
+        }
+    }
+}
+
+#[derive(serde::Deserialize, Clone, Debug)]
 pub struct Settings {
     pub chunk_settings: ChunkSettings,
+    pub repository_settings: RepositorySettings,
 
     pub debug: bool,
 }
@@ -28,6 +42,7 @@ impl Settings {
     pub fn default() -> Self {
         Self {
             chunk_settings: ChunkSettings::default(),
+            repository_settings: RepositorySettings::default(),
             debug: false,
         }
     }
